@@ -1,6 +1,6 @@
 <?php
 //*************************************************** */
-//Configuracion de inicio de sesión de usuarios
+//Configuracion para obtener un producto por ID
 //*************************************************** */
 
 //Encabezados obligatorios en las APIS en formatos JSON
@@ -8,11 +8,11 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
 
-//Inclucion del modelo de usuario
-include_once "../app/ModelUser.php";
+//Inclucion del modelo de productos
+include_once "../../app/ModelProductos.php";
 
 //Inicializacion de instancias
-$modelUser = new ModelUser();
+$modelProductos = new ModelProductos();
 
 
 //Obtener peticiones JSON
@@ -20,31 +20,28 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 
 //Validacion de datos recibidos
-if (empty($data["usuario"]) || empty($data["contrasena"])) {
+if (empty($data["id"])) {
     
     //Manejo de errores de validacion
     http_response_code(400);
-    echo json_encode(["mensaje" => "Faltan datos requeridos."]);
+    echo json_encode(["mensaje" => "Falta el ID del producto."]);
     exit;
     
 }
 
+    
 try {
     //*************************************************** */
-    //Verificar credenciales del usuario
+    //Obtener producto por ID
     //*************************************************** */
-    $user = $modelUser->verificar($data["usuario"], $data["contrasena"]);
+    $producto = $modelProductos->obtenerPorId($data["id"]);
 
-    if ($user) {
+    if ($producto) {
         http_response_code(200);
-        echo json_encode([
-            "mensaje" => "Autenticación satisfactoria.",
-            "redirigir" => "/APIREST/endpoints/home.php",
-            "usuario" => $data["usuario"]
-        ]);
+        echo json_encode($producto, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     } else {
-        http_response_code(401);
-        echo json_encode(["mensaje" => "Error en la autenticación."]);
+        http_response_code(404);
+        echo json_encode(["mensaje" => "Producto no encontrado."]);
     }
 
 } catch (PDOException $e) {

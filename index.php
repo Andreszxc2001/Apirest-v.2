@@ -13,7 +13,7 @@ $respuesta = [
 	"ADSO" => "GRUPO 5 FICHA 3070294",
 
 	"GUIAS" => "Evidencia de desempeño: (RAP 17) GA7-220501096-AA5-EV01 diseño y desarrollo de servicios web - caso",
-	"GUIAS" => "RAP17_GA7_AA5_EV02_IVO_ API",
+	"GUIAS" => "RAP17_GA7_AA5_EV04_IVO_ API del Proyecto.",
 
     "descripcion" => "Servicio web REST con PHP y PDO para registrar usuarios e iniciar sesión.",
     "endpoints" => [

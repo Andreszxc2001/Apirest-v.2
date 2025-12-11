@@ -1,6 +1,6 @@
-# API REST - Sistema de Autenticación de Usuarios
+# API REST - Sistema de Autenticación y Gestión de Productos
 
-API REST desarrollada en PHP para gestionar el registro e inicio de sesión de usuarios con autenticación segura mediante encriptación de contraseñas.
+API REST desarrollada en PHP para gestionar el registro e inicio de sesión de usuarios con autenticación segura mediante encriptación de contraseñas, además de un sistema completo de gestión de productos (CRUD).
 
 ## 📋 Tabla de Contenidos
 
@@ -15,11 +15,14 @@ API REST desarrollada en PHP para gestionar el registro e inicio de sesión de u
 ## ✨ Características
 
 - 🔐 Registro de usuarios con contraseñas encriptadas (BCrypt)
-- 🔑 Sistema de inicio de sesión seguro
+- 🔑 Sistema de inicio de sesión seguro con redirección al panel de administración
+- 📦 CRUD completo de productos (Crear, Leer, Actualizar, Eliminar)
+- 🏠 Panel de administración (home.php) con menú de gestión de productos
 - 📊 Arquitectura MVC (Model-View-Controller)
 - 🗄️ Conexión a base de datos MySQL mediante PDO
 - ⚡ Respuestas en formato JSON
 - 🛡️ Manejo de errores y validaciones
+- 🔄 Soporte para métodos GET y POST en endpoints de productos
 
 ## 📁 Estructura del Proyecto
 
@@ -27,20 +30,31 @@ API REST desarrollada en PHP para gestionar el registro e inicio de sesión de u
 APIREST/
 │
 ├── app/
-│   └── ModelUser.php          # Modelo de usuario con lógica de negocio
+│   ├── ModelUser.php          # Modelo de usuario con lógica de negocio
+│   └── ModelProductos.php     # Modelo de productos con operaciones CRUD
 │
 ├── config/
 │   └── db.php                 # Configuración de conexión a base de datos
 │
 ├── endpoints/
 │   ├── login.php              # Endpoint de inicio de sesión
-│   └── register.php           # Endpoint de registro de usuarios
+│   ├── register.php           # Endpoint de registro de usuarios
+│   ├── home.php               # Panel de administración de productos
+│   ├── produc/
+│   │   ├── listar.php         # Listar todos los productos
+│   │   ├── insertar.php       # Crear nuevo producto
+│   │   ├── obtener.php        # Obtener producto por ID (POST)
+│   │   ├── obtener_get.php    # Obtener producto por ID (GET)
+│   │   ├── actualizar.php     # Actualizar producto existente
+│   │   ├── eliminar.php       # Eliminar producto (POST)
+│   │   └── eliminar_get.php   # Eliminar producto (GET)
+│   └── user/
 │
 ├── sql/
 │   └── db.sql                 # Script de creación de base de datos
 │
-├── index.php                  # Archivo principal
-└── README.MD                  # Documentación del proyecto
+├── index.php                  # Archivo principal con información de la API
+└── README.md                  # Documentación del proyecto
 ```
 
 ## 🔧 Requisitos
@@ -75,15 +89,32 @@ Abre phpMyAdmin (http://localhost/phpmyadmin) y ejecuta el script SQL ubicado en
 CREATE DATABASE db_test;
 USE db_test;
 
+-- Tabla de usuarios
 CREATE TABLE usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario VARCHAR(100) NOT NULL UNIQUE,
   contrasena VARCHAR(255) NOT NULL
 );
 
--- Usuario de ejemplo
+-- Tabla de productos
+CREATE TABLE productos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  precio DECIMAL(10,2) NOT NULL,
+  stock INT NOT NULL DEFAULT 0,
+  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Usuario de ejemplo (contraseña: password)
 INSERT INTO usuarios (usuario, contrasena) VALUES 
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+
+-- Productos de ejemplo
+INSERT INTO productos (nombre, descripcion, precio, stock) VALUES
+('Laptop HP', 'Laptop HP Core i5, 8GB RAM, 256GB SSD', 2500.00, 10),
+('Mouse Logitech', 'Mouse inalámbrico Logitech M185', 45.00, 50),
+('Teclado Mecánico', 'Teclado mecánico RGB retroiluminado', 150.00, 25);
 ```
 
 ## ⚙️ Configuración
@@ -101,7 +132,9 @@ private $password = "";
 
 ## 🌐 Endpoints
 
-### 1. Registro de Usuario
+### Endpoints de Autenticación
+
+#### 1. Registro de Usuario
 
 **URL:** `POST /endpoints/register.php`
 
@@ -148,7 +181,7 @@ Content-Type: application/json
 }
 ```
 
-### 2. Inicio de Sesión
+#### 2. Inicio de Sesión
 
 **URL:** `POST /endpoints/login.php`
 
@@ -170,7 +203,9 @@ Content-Type: application/json
 - ✅ **200 OK** - Autenticación exitosa
 ```json
 {
-  "mensaje": "Autenticación satisfactoria."
+  "mensaje": "Autenticación satisfactoria.",
+  "redirigir": "/APIREST/endpoints/home.php",
+  "usuario": "nombre_usuario"
 }
 ```
 
@@ -195,6 +230,155 @@ Content-Type: application/json
 }
 ```
 
+#### 3. Panel de Administración
+
+**URL:** `GET /endpoints/home.php`
+
+Muestra el menú completo con todos los endpoints disponibles para la gestión de productos.
+
+### Endpoints de Productos
+
+#### 4. Listar Todos los Productos
+
+**URL:** `GET /endpoints/produc/listar.php`
+
+**Respuesta exitosa (200 OK):**
+```json
+[
+  {
+    "producto": {
+      "id": 1,
+      "nombre": "Laptop HP",
+      "descripcion": "Laptop HP Core i5",
+      "precio": "2500.00",
+      "stock": 10
+    },
+    "acciones": {
+      "obtener": {
+        "metodo": "GET",
+        "url": "http://localhost/APIREST/endpoints/produc/obtener_get.php?id=1"
+      },
+      "actualizar": {
+        "metodo": "POST",
+        "url": "/APIREST/endpoints/produc/actualizar.php"
+      },
+      "eliminar": {
+        "metodo": "GET",
+        "url": "http://localhost/APIREST/endpoints/produc/eliminar_get.php?id=1"
+      }
+    }
+  }
+]
+```
+
+#### 5. Insertar Nuevo Producto
+
+**URL:** `POST /endpoints/produc/insertar.php`
+
+**Body (JSON):**
+```json
+{
+  "nombre": "Producto nuevo",
+  "descripcion": "Descripción del producto",
+  "precio": 100.00,
+  "stock": 50
+}
+```
+
+**Respuesta exitosa (201 Created):**
+```json
+{
+  "mensaje": "Producto insertado correctamente.",
+  "producto": {
+    "id": 4,
+    "nombre": "Producto nuevo",
+    "descripcion": "Descripción del producto",
+    "precio": "100.00",
+    "stock": 50
+  }
+}
+```
+
+#### 6. Obtener Producto por ID
+
+**URL (POST):** `POST /endpoints/produc/obtener.php`
+
+**Body (JSON):**
+```json
+{
+  "id": 1
+}
+```
+
+**URL (GET):** `GET /endpoints/produc/obtener_get.php?id=1`
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+  "id": 1,
+  "nombre": "Laptop HP",
+  "descripcion": "Laptop HP Core i5",
+  "precio": "2500.00",
+  "stock": 10
+}
+```
+
+#### 7. Actualizar Producto
+
+**URL:** `POST /endpoints/produc/actualizar.php`
+
+**Body (JSON):**
+```json
+{
+  "id": 1,
+  "nombre": "Laptop HP Actualizada",
+  "descripcion": "Nueva descripción",
+  "precio": 2800.00,
+  "stock": 15
+}
+```
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+  "mensaje": "Producto actualizado correctamente.",
+  "producto": {
+    "id": 1,
+    "nombre": "Laptop HP Actualizada",
+    "descripcion": "Nueva descripción",
+    "precio": "2800.00",
+    "stock": 15
+  }
+}
+```
+
+#### 8. Eliminar Producto
+
+**URL (POST):** `POST /endpoints/produc/eliminar.php`
+
+**Body (JSON):**
+```json
+{
+  "id": 1
+}
+```
+
+**URL (GET):** `GET /endpoints/produc/eliminar_get.php?id=1`
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+  "mensaje": "Producto eliminado correctamente.",
+  "producto_eliminado": {
+    "id": 1,
+    "nombre": "Laptop HP",
+    "descripcion": "Laptop HP Core i5",
+    "precio": "2500.00",
+    "stock": 10
+  }
+}
+```
+
 ## 📝 Ejemplos de Uso
 
 ### Usando cURL
@@ -211,6 +395,35 @@ curl -X POST http://localhost/APIREST/endpoints/register.php \
 curl -X POST http://localhost/APIREST/endpoints/login.php \
   -H "Content-Type: application/json" \
   -d '{"usuario":"john_doe","contrasena":"password123"}'
+```
+
+**Listar Productos:**
+```bash
+curl http://localhost/APIREST/endpoints/produc/listar.php
+```
+
+**Insertar Producto:**
+```bash
+curl -X POST http://localhost/APIREST/endpoints/produc/insertar.php \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Tablet","descripcion":"Tablet Android 10 pulgadas","precio":350.00,"stock":20}'
+```
+
+**Obtener Producto (GET):**
+```bash
+curl http://localhost/APIREST/endpoints/produc/obtener_get.php?id=1
+```
+
+**Actualizar Producto:**
+```bash
+curl -X POST http://localhost/APIREST/endpoints/produc/actualizar.php \
+  -H "Content-Type: application/json" \
+  -d '{"id":1,"nombre":"Laptop HP Premium","descripcion":"Actualizada","precio":2999.00,"stock":8}'
+```
+
+**Eliminar Producto (GET):**
+```bash
+curl http://localhost/APIREST/endpoints/produc/eliminar_get.php?id=1
 ```
 
 ### Usando Postman
@@ -247,7 +460,7 @@ fetch('http://localhost/APIREST/endpoints/register.php', {
 .catch(error => console.error('Error:', error));
 ```
 
-**Login:**
+**Login con redirección:**
 ```javascript
 fetch('http://localhost/APIREST/endpoints/login.php', {
   method: 'POST',
@@ -257,6 +470,58 @@ fetch('http://localhost/APIREST/endpoints/login.php', {
   body: JSON.stringify({
     usuario: 'nuevo_usuario',
     contrasena: 'password123'
+  })
+})
+.then(response => response.json())
+.then(data => {
+  console.log(data);
+  if (data.redirigir) {
+    window.location.href = data.redirigir;
+  }
+})
+.catch(error => console.error('Error:', error));
+```
+
+**Listar Productos:**
+```javascript
+fetch('http://localhost/APIREST/endpoints/produc/listar.php')
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+```
+
+**Insertar Producto:**
+```javascript
+fetch('http://localhost/APIREST/endpoints/produc/insertar.php', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    nombre: 'Tablet Samsung',
+    descripcion: 'Tablet 10 pulgadas',
+    precio: 450.00,
+    stock: 15
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+```
+
+**Actualizar Producto:**
+```javascript
+fetch('http://localhost/APIREST/endpoints/produc/actualizar.php', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    id: 1,
+    nombre: 'Laptop HP Actualizada',
+    descripcion: 'Nueva descripción',
+    precio: 2800.00,
+    stock: 12
   })
 })
 .then(response => response.json())
@@ -273,13 +538,21 @@ fetch('http://localhost/APIREST/endpoints/login.php', {
 
 ## 🏗️ Arquitectura
 
-### Modelo (ModelUser.php)
+### Modelos
 
+#### ModelUser.php
 Gestiona la lógica de negocio relacionada con usuarios:
-
 - **Constructor:** Inicializa la conexión a la base de datos
 - **insertar($array):** Registra un nuevo usuario con contraseña encriptada
 - **verificar($usuario, $contrasena):** Verifica las credenciales de un usuario
+
+#### ModelProductos.php
+Gestiona la lógica de negocio relacionada con productos:
+- **obtenerTodos():** Obtiene todos los productos de la base de datos
+- **obtenerPorId($id):** Obtiene un producto específico por su ID
+- **insertar($array):** Inserta un nuevo producto
+- **actualizar($array):** Actualiza un producto existente
+- **eliminar($id):** Elimina un producto por su ID
 
 ### Configuración (db.php)
 
@@ -288,27 +561,37 @@ Clase Database que maneja la conexión a MySQL mediante PDO con:
 - Modo de error PDO en modo excepción
 - Respuestas JSON en caso de error de conexión
 
-### Endpoints (login.php y register.php)
+### Endpoints
 
+#### Autenticación (login.php, register.php, home.php)
 Controladores que:
 - Reciben peticiones POST con datos JSON
 - Validan los datos recibidos
 - Interactúan con el modelo para realizar operaciones
 - Retornan respuestas HTTP apropiadas en formato JSON
+- Redirigen al panel de administración tras login exitoso
+
+#### Gestión de Productos (produc/*)
+Controladores CRUD que:
+- Soportan métodos GET y POST según el endpoint
+- Validan datos de entrada
+- Realizan operaciones CRUD en la base de datos
+- Incluyen enlaces HATEOAS en el listado
+- Retornan datos completos del producto en cada operación
 
 ## 🛠️ Desarrollo
 
 ### Agregar nuevos endpoints
 
-1. Crear archivo en `endpoints/`
-2. Incluir el modelo necesario
-3. Implementar validaciones
+1. Crear archivo en `endpoints/` o en una subcarpeta apropiada
+2. Incluir el modelo necesario desde `app/`
+3. Implementar validaciones de datos
 4. Manejar respuestas con códigos HTTP apropiados
+5. Retornar siempre respuestas en formato JSON
 
-### Extender el modelo
+### Extender los modelos
 
-Agregar nuevos métodos en `app/ModelUser.php`:
-
+**Ejemplo - Agregar método en ModelUser.php:**
 ```php
 public function obtenerPorId($id) {
     $sql = "SELECT * FROM usuarios WHERE id = :id";
@@ -318,19 +601,49 @@ public function obtenerPorId($id) {
 }
 ```
 
+**Ejemplo - Agregar método en ModelProductos.php:**
+```php
+public function buscarPorNombre($nombre) {
+    $sql = "SELECT * FROM productos WHERE nombre LIKE :nombre";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':nombre' => "%$nombre%"]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+```
+
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT.
 
-## 👨‍💻 Autor
+## 👨‍💻 Autores
 
-Desarrollado con ❤️ para aprender desarrollo de APIs REST en PHP.
+**Desarrollado por:**
+- Arnaldo Pushaina
+- Elkin Granados
+- Juan Pablo Hernandez
+
+**ADSO - GRUPO 5 FICHA 3070294**
+
+**Evidencias:**
+- RAP 17: GA7-220501096-AA5-EV01 - Diseño y desarrollo de servicios web
+- RAP17_GA7_AA5_EV02_IVO - API
 
 ---
 
-**Nota:** Este proyecto es para fines educativos y de desarrollo. Para producción, considera implementar:
-- Tokens JWT para autenticación
-- Rate limiting
-- HTTPS obligatorio
-- Logs de actividad
-- Validaciones más robustas
+## 🚀 Mejoras Futuras
+
+Para un entorno de producción, considera implementar:
+- ✅ Tokens JWT para autenticación persistente
+- ✅ Middleware de autenticación en endpoints de productos
+- ✅ Rate limiting para prevenir abuso
+- ✅ HTTPS obligatorio
+- ✅ Logs de actividad y auditoría
+- ✅ Validaciones más robustas con librerías especializadas
+- ✅ Paginación en listado de productos
+- ✅ Búsqueda y filtros avanzados
+- ✅ Subida de imágenes de productos
+- ✅ Sistema de roles y permisos
+
+---
+
+**Nota:** Este proyecto es para fines educativos y de desarrollo. Desarrollado con ❤️ para aprender desarrollo de APIs REST en PHP.
