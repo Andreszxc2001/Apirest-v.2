@@ -9,6 +9,7 @@ API REST desarrollada en PHP para gestionar el registro e inicio de sesión de u
 - [Requisitos](#requisitos)
 - [Instalación](#instalación)
 - [Configuración](#configuración)
+- [Despliegue en Railway](#despliegue-en-railway)
 - [Endpoints](#endpoints)
 - [Ejemplos de Uso](#ejemplos-de-uso)
 
@@ -23,6 +24,8 @@ API REST desarrollada en PHP para gestionar el registro e inicio de sesión de u
 - ⚡ Respuestas en formato JSON
 - 🛡️ Manejo de errores y validaciones
 - 🔄 Soporte para métodos GET y POST en endpoints de productos
+- 🐳 Containerizado con Docker para fácil despliegue
+- ☁️ Listo para desplegar en Railway con variables de entorno
 
 ## 📁 Estructura del Proyecto
 
@@ -119,16 +122,64 @@ INSERT INTO productos (nombre, descripcion, precio, stock) VALUES
 
 ## ⚙️ Configuración
 
-### Archivo `config/db.php`
+### Desarrollo Local
 
-Configura los parámetros de conexión a la base de datos:
+El archivo `config/db.php` está configurado para usar variables de entorno o valores por defecto:
 
 ```php
-private $host = "localhost";
-private $db_name = "db_test";
-private $username = "root";
-private $password = "";
+// Automáticamente usa variables de entorno si están disponibles
+$this->host = getenv('DB_HOST') ?: 'localhost';
+$this->db_name = getenv('DB_NAME') ?: 'db_test';
+$this->username = getenv('DB_USER') ?: 'root';
+$this->password = getenv('DB_PASSWORD') ?: '';
 ```
+
+Para desarrollo local, simplemente usa XAMPP con los valores por defecto.
+
+### Producción (Railway)
+
+Ver la sección [Despliegue en Railway](#despliegue-en-railway) para configuración en producción.
+
+## 🚂 Despliegue en Railway
+
+Este proyecto está completamente preparado para desplegarse en Railway. **[Ver guía completa de despliegue](RAILWAY.md)**
+
+### Pasos Rápidos:
+
+1. **Push a GitHub:**
+   ```bash
+   git init
+   git add .
+   git commit -m "Deploy to Railway"
+   git branch -M main
+   git remote add origin <tu-repo>
+   git push -u origin main
+   ```
+
+2. **Crear proyecto en Railway:**
+   - Ve a [railway.app](https://railway.app)
+   - New Project → Deploy from GitHub repo
+   - Selecciona tu repositorio
+
+3. **Añadir MySQL:**
+   - En tu proyecto: + New → Database → Add MySQL
+   - Railway creará las variables automáticamente
+
+4. **Configurar variables de entorno:**
+   ```
+   DB_HOST=<MYSQL_HOST de Railway>
+   DB_NAME=<MYSQL_DATABASE de Railway>
+   DB_USER=<MYSQL_USER de Railway>
+   DB_PASSWORD=<MYSQL_PASSWORD de Railway>
+   ```
+
+5. **Crear tablas en la base de datos:**
+   - Conecta a MySQL de Railway
+   - Ejecuta el script de `sql/db.sql`
+
+6. **¡Listo!** Tu API estará disponible en: `https://tu-app.railway.app`
+
+📖 **[Guía Completa de Railway](RAILWAY.md)** - Incluye troubleshooting y mejores prácticas
 
 ## 🌐 Endpoints
 
