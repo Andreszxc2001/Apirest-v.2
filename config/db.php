@@ -1,20 +1,27 @@
 <?php
 //conexion a base de datos mediante la clase Database
 class Database {
-    private $host = "localhost";
-    private $db_name = "db_test";
-    private $username = "root";
-    private $password = "";
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
+    private $port;
     private $conn;
 
 
     //funcion para interactuar con la conexiona base de datos
     public function conectar() {
         
+        $this->host = $_ENV['DB_HOST'];
+        $this->db_name = $_ENV['DB_NAME'];
+        $this->username = $_ENV['DB_USER'];
+        $this->password = $_ENV['DB_PASSWORD'];
+        $this->port = $_ENV['DB_PORT'];
+        
         //empleamos try catch para manejar errores de conexion
         try {
             $this->conn = new PDO(
-                "mysql:host={$this->host};dbname={$this->db_name}",
+                "mysql:host={$this->host};port={$this->port};dbname={$this->db_name}",
                 $this->username,
                 $this->password,
                 array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
