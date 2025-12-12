@@ -1,5 +1,2 @@
-Dockerfile
-docker-entrypoint.sh
-railway.json
 RAILWAY.md
-.htaccess
+README.md

@@ -17,7 +17,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN chown -R www-data:www-data /var/www/html
 
 # Puerto por defecto (Railway lo sobrescribe)
-ENV PORT 8080
+ENV PORT=8080
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
